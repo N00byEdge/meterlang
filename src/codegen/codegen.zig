@@ -76,7 +76,7 @@ pub fn CodeGenerator(comptime platform: type) type {
             if (self.max_stack_bytes < self.curr_stack_bytes)
                 self.max_stack_bytes = self.curr_stack_bytes;
 
-            return @intCast(platform.offset_type, self.stack_offsets.items.len - 1);
+            return offset;
         }
 
         pub fn singleInstr(self: *@This(), instr: ir.Instruction, output: *ByteWriter) !void {
