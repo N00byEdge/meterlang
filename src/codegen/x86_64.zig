@@ -450,6 +450,10 @@ pub fn storeArgs(output: *ByteWriter, num: usize, offset: offset_type) !void {
     };
 
     for (regs) |r, i| {
-        try stackRegOp(output, .Store, 64, base - i * 8, r);
+        if (num > i) {
+            try stackRegOp(output, .Store, 64, base - i * 8, r);
+        } else {
+            break;
+        }
     }
 }
