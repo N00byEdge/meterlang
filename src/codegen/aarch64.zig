@@ -519,6 +519,10 @@ pub fn ptrLoad(output: *ByteWriter, sign_extend: bool, bit_size: u7, ptr_stack_o
 }
 
 pub fn storeArgs(output: *ByteWriter, num: usize, offset: offset_type) !void {
+    if (num > 8) {
+        unreachable;
+    }
+
     var pushed: u5 = 0;
     while (pushed < num) {
         const current_offset = offset + pushed * 0x10;
