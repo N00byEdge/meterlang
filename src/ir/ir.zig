@@ -30,38 +30,58 @@ pub const InstrType = enum {
 };
 
 pub const Instruction = union(InstrType) {
-    ref_next_instruction: struct {
-        id: usize,
-    },
+    // Creates a reference to the next instruction using the specified id
+    ref_next_instruction: usize,
 
-    add_stack: struct {
-        size: usize,
-    },
+    // Creates a new stack slot with <value> bytes of stack space.
+    add_stack: usize,
 
     // Stores the first <value> arguments onto the stack. Creates a new stack
     // slot (like using .add_stack), and you can access the arguments using offsetting
     store_arguments: usize,
 
+    // Drops the top stack slot
     drop_stack: void,
 
+    // Loads a constant value into the accumulator
     load_constant: i65,
+
+    // Compares the accumulator to a constant
     compare_constant: i65,
+
+    // Adds a constant to the accumulator
     add_constant: i65,
 
+    // Puts the address of a stack variable into the accumulator
     adress_stack_var: StackVarRef,
+
+    // Loads a stack variable into the accumulator
     load_stack_var: struct {
         sign_extend: bool,
         stack_op: StackVarOp,
     },
+
+    // Stores the accumulator value to a stack variable
     store_stack_var: StackVarOp,
 
+    // Compare the accumulator to a stack variable
     compare_stack_var: StackVarOp,
+
+    // Applies accumulator = accumulator ^ stack_var
     bitxor_stack_var: StackVarOp,
+
+    // Applies accumulator = accumulator | stack_var
     bitor_stack_var: StackVarOp,
+
+    // Applies accumulator = accumulator & stack_var
     bitand_stack_var: StackVarOp,
 
+    // (Optionally conditionally) jumps to a referenced instruction.
+    // If using a cmp conditional, it's affected by the precious compare
+    // instruction.
     jump: Jump,
 
+    // Loads the address of an xref into the accumulator
     adress_xref: Xref,
 
     // Load accumulator from xref

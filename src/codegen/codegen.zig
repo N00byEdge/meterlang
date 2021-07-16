@@ -81,15 +81,15 @@ pub fn CodeGenerator(comptime platform: type) type {
 
         pub fn singleInstr(self: *@This(), instr: ir.Instruction, output: *ByteWriter) !void {
             switch (instr) {
-                .ref_next_instruction => |ref| {
-                    if (ref.id != self.resolved_refs.items.len) {
+                .ref_next_instruction => |id| {
+                    if (id != self.resolved_refs.items.len) {
                         @panic("Ref ids not in order!");
                     }
 
                     var i: usize = 0;
                     while (i < self.unresolved_refs.items.len) {
                         const item = &self.unresolved_refs.items[i];
-                        if (item.id == ref.id) {
+                        if (item.id == id) {
                             if (item.fixup.isRelative()) {
                                 item.fixup.applyRelative(output, @intCast(i64, output.currentOffset()));
                             } else {
@@ -104,7 +104,7 @@ pub fn CodeGenerator(comptime platform: type) type {
                     });
                 },
 
-                .add_stack => |push| _ = try self.addStackSlot(push.size),
+                .add_stack => |size| _ = try self.addStackSlot(size),
                 .store_arguments => |num| try platform.storeArgs(output, num, try self.addStackSlot(num * 8)),
                 .drop_stack => |_| {
                     self.curr_stack_bytes = self.stack_offsets.items[self.stack_offsets.items.len - 2];
@@ -205,9 +205,7 @@ test "Load 0x1337" {
 test "Store accum to null" {
     try testInstrs(&[_]ir.Instruction{
         .{ .load_constant = 0 },
-        .{ .add_stack = .{
-            .size = 8,
-        } },
+        .{ .add_stack = 8 },
         .{ .store_stack_var = .{
             .bit_size = 64,
             .stack_var = .{
