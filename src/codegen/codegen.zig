@@ -241,6 +241,7 @@ test "Store constant to null" {
 test "memzero" {
     try testInstrs(&[_]ir.Instruction{
         .{ .store_arguments = 2 },
+        .{ .ref_next_instruction = 0 },
         .{ .load_stack_var = .{
             .sign_extend = false,
             .stack_op = .{
@@ -252,7 +253,7 @@ test "memzero" {
             },
         } },
         .{ .jump = .{
-            .id = 0,
+            .id = 1,
             .condition = .AccEqualZero,
         } },
         .{ .add_constant = -1 },
@@ -286,6 +287,10 @@ test "memzero" {
                 .offset = 0,
             },
         } },
-        .{ .ref_next_instruction = 0 },
+        .{ .jump = .{
+            .id = 0,
+            .condition = .Always,
+        } },
+        .{ .ref_next_instruction = 1 },
     });
 }
