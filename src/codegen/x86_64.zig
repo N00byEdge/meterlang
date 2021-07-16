@@ -305,7 +305,32 @@ pub fn bitAndStack(output: *ByteWriter, bit_size: u7, offset: offset_type) !void
 }
 
 pub fn jumpRef(output: *ByteWriter, condition: ir.Jump.Condition, target_offset: usize) !void {
-    unreachable;
+    // Emit any compares
+    switch (condition) {
+        .AccEqualZero, .AccNotEqualZero => {
+            _ = try output.writeBytes(&[_]u8{ 0x48, 0x39, 0xC0 }); // cmp rax, rax
+        },
+        else => {},
+    }
+
+    var rel_offset = @intCast(i65, target_offset) - @intCast(i65, output.currentOffset());
+
+    // Jump opcode itself
+    switch (condition) {
+        .Always => {
+            // Instruction is at least 2 bytes long, check if it still fits in one byte
+            if (rel_offset < (255 - 2)) {
+                rel_offset -= 2;
+                _ = try output.writeBytes(&[_]u8{0xEB}); // jmp imm8
+                _ = try output.writeLittle(i8, @intCast(i8, rel_offset));
+            } else {
+                rel_offset -= 5;
+                _ = try output.writeBytes(&[_]u8{0xE9}); // jmp imm32
+                _ = try output.writeLittle(i32, @intCast(i32, rel_offset));
+            }
+        },
+        else => unreachable,
+    }
 }
 
 pub fn jumpReloc(output: *ByteWriter, condition: ir.Jump.Condition) !Relocation {
