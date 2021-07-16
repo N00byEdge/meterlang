@@ -188,7 +188,7 @@ test "ldr" {
 fn ldpStp(rt: u5, rt2: u5, rn: u5, offset: u7, op_size: LDPSTPOpSize, mode: LDPSTPMode) u32 {
     // zig fmt: off
     return 0x29000000
-        | @intCast(u32, @enumToInt(op_size)) << 31
+        | @intCast(u32, @enumToInt(op_size)) << 30
         | @intCast(u32, @enumToInt(mode)) << 22
         | @intCast(u32, offset) << 15
         | @intCast(u32, rt2) << 10
