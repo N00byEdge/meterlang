@@ -31,11 +31,11 @@ pub const Relocation = struct {
         };
     }
 
-    pub fn applyRelative(self: *const @This(), output: *ByteWriter, rel: i65) void {
+    pub fn applyRelative(self: *const @This(), output: *ByteWriter, target_offset: i65) void {
+        const rel_addr = target_offset - self.bytes.offset;
+
         return switch (self.reltype) {
-            .rel32jmp => {
-                std.mem.writeIntLittle(i32, output.bytes(self.bytes)[0..4], @intCast(i32, rel));
-            },
+            .rel32jmp => std.mem.writeIntLittle(i32, output.bytes(self.bytes)[0..4], @intCast(i32, rel_addr - 4)),
         };
     }
 };
