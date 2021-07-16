@@ -424,7 +424,13 @@ pub fn adrStack(output: *ByteWriter, offset: offset_type) !void {
 }
 
 pub fn loadStack(output: *ByteWriter, sign_extend: bool, bit_size: u7, offset: i65) !void {
-    unreachable;
+    switch (bit_size) {
+        8 => _ = try output.writeLittle(u32, ldr(0, 31, @intCast(u12, offset), .B)),
+        16 => _ = try output.writeLittle(u32, ldr(0, 31, @intCast(u12, offset), .H)),
+        32 => _ = try output.writeLittle(u32, ldr(0, 31, @intCast(u12, offset), .W)),
+        64 => _ = try output.writeLittle(u32, ldr(0, 31, @intCast(u12, offset), .X)),
+        else => unreachable,
+    }
 }
 
 pub fn storeStack(output: *ByteWriter, bit_size: u7, offset: i65) !void {
