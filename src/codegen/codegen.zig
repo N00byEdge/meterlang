@@ -68,6 +68,17 @@ pub fn CodeGenerator(comptime platform: type) type {
             return self.stack_offsets.items[1 + ref.idx] + @intCast(platform.offset_type, ref.offset);
         }
 
+        fn addStackSlot(self: *@This(), size: usize) !platform.offset_type {
+            const offset = self.curr_stack_bytes;
+            try self.stack_offsets.append(offset);
+            self.curr_stack_bytes = offset + @intCast(platform.offset_type, size);
+
+            if (self.max_stack_bytes < self.curr_stack_bytes)
+                self.max_stack_bytes = self.curr_stack_bytes;
+
+            return @intCast(platform.offset_type, self.stack_offsets.items.len - 1);
+        }
+
         pub fn singleInstr(self: *@This(), instr: ir.Instruction, output: *ByteWriter) !void {
             switch (instr) {
                 .ref_next_instruction => |ref| {
@@ -93,15 +104,7 @@ pub fn CodeGenerator(comptime platform: type) type {
                     });
                 },
 
-                .add_stack => |push| {
-                    const offset = self.curr_stack_bytes;
-                    try self.stack_offsets.append(offset);
-                    self.curr_stack_bytes = offset + @intCast(platform.offset_type, push.size);
-
-                    if (self.max_stack_bytes < self.curr_stack_bytes)
-                        self.max_stack_bytes = self.curr_stack_bytes;
-                },
-
+                .add_stack => |push| _ = try self.addStackSlot(push.size),
                 .drop_stack => |_| {
                     self.curr_stack_bytes = self.stack_offsets.items[self.stack_offsets.items.len - 2];
                     _ = self.stack_offsets.pop();
