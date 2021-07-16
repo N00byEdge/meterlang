@@ -309,7 +309,27 @@ pub fn jumpRef(output: *ByteWriter, condition: ir.Jump.Condition, target_offset:
 }
 
 pub fn jumpReloc(output: *ByteWriter, condition: ir.Jump.Condition) !Relocation {
-    unreachable;
+    return switch (condition) {
+        .AccEqualZero => {
+            _ = try output.writeBytes(&[_]u8{ 0x48, 0x39, 0xC0 }); // cmp rax, rax
+            return Relocation{
+                .reltype = .rel32jmp,
+                .bytes = (try output.writeBytes(&[_]u8{ 0x0F, 0x84, 0x00, 0x00, 0x00, 0x00 })).subslice(2), // jz
+            };
+        },
+        .AccNotEqualZero => {
+            _ = try output.writeBytes(&[_]u8{ 0x48, 0x39, 0xC0 }); // cmp rax, rax
+            return Relocation{
+                .reltype = .rel32jmp,
+                .bytes = (try output.writeBytes(&[_]u8{ 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00 })).subslice(2), // jnz
+            };
+        },
+        .Always => Relocation{
+            .reltype = .rel32jmp,
+            .bytes = (try output.writeBytes(&[_]u8{ 0xE9, 0x00, 0x00, 0x00, 0x00 })).subslice(1), // jmp
+        },
+        else => unreachable,
+    };
 }
 
 pub fn emitAdrReloc(output: *ByteWriter, ref: ir.Xref) !Relocation {
