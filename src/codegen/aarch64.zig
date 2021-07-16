@@ -39,16 +39,6 @@ pub const Relocation = struct {
     }
 };
 
-fn sub(rd: u5, rn: u5, imm: u12) u32 {
-    // zig fmt: off
-    return 0xD1000000 // Opcode
-        | @intCast(u32, imm) << 10
-        | @intCast(u32, rn) << 5
-        | @intCast(u32, rd) << 0
-    ;
-    // zig fmt: on
-}
-
 fn rawMov(rd: u5, imm: u16, lsl: MovLSL, keep: MovKeep, negate: MovNegation, op_size: MovOpSize) u32 {
     // zig fmt: off
     return 0x12800000
@@ -195,6 +185,63 @@ test "ldr" {
     try std.testing.expect(ldr(0, 0, 0, .X) == 0xF9400000);
 }
 
+fn subAdd(rd: u5, rn: u5, imm: u12, op_size: SubAddOpSize, mode: SubAddMode, sign: SubAddSignedness) u32 {
+    // zig fmt: off
+    return 0x11000000 // Opcode
+        | @intCast(u32, @enumToInt(op_size)) << 31
+        | @intCast(u32, @enumToInt(mode)) << 30
+        | @intCast(u32, @enumToInt(sign)) << 29
+        | @intCast(u32, imm) << 10
+        | @intCast(u32, rn) << 5
+        | @intCast(u32, rd) << 0
+    ;
+    // zig fmt: on
+}
+
+fn subAddRegs(rd: u5, rn: u5, rm: u5, op_size: SubAddOpSize, mode: SubAddMode, sign: SubAddSignedness) u32 {
+    // zig fmt: off
+    return 0x0B000000 // Opcode
+        | @intCast(u32, @enumToInt(op_size)) << 31
+        | @intCast(u32, @enumToInt(mode)) << 30
+        | @intCast(u32, @enumToInt(sign)) << 29
+        | @intCast(u32, rm) << 16
+        | @intCast(u32, rn) << 5
+        | @intCast(u32, rd) << 0
+    ;
+    // zig fmt: on
+}
+
+const SubAddOpSize = enum(u1) {
+    W = 0,
+    X = 1,
+};
+
+const SubAddMode = enum(u1) {
+    Add = 0,
+    Sub = 1,
+};
+
+const SubAddSignedness = enum(u1) {
+    Unsigned = 0,
+    Signed = 1,
+};
+
+fn sub(rd: u5, rn: u5, imm: u12, op_size: SubAddOpSize) u32 {
+    return subAdd(rd, rn, imm, op_size, .Sub, .Unsigned);
+}
+
+fn subRegs(rd: u5, rn: u5, rm: u5, op_size: SubAddOpSize) u32 {
+    return subAddRegs(rd, rn, rm, op_size, .Sub, .Unsigned);
+}
+
+fn add(rd: u5, rn: u5, imm: u12, op_size: SubAddOpSize) u32 {
+    return subAdd(rd, rn, imm, op_size, .Add, .Unsigned);
+}
+
+fn addRegs(rd: u5, rn: u5, rm: u5, op_size: SubAddOpSize) u32 {
+    return subAddRegs(rd, rn, rm, op_size, .Add, .Unsigned);
+}
+
 const Decomposed = struct {
     lsl0: ?u16,
     lsl16: ?u16,
@@ -300,7 +347,7 @@ pub fn prepareFunction(output: *ByteWriter) !ByteWriter.Ref {
 }
 
 pub fn endFunction(output: *ByteWriter, fixup: ByteWriter.Ref, used_stack_bytes: offset_type) !void {
-    std.mem.writeIntLittle(u32, output.bytes(fixup)[0..4], sub(31, 31, used_stack_bytes));
+    std.mem.writeIntLittle(u32, output.bytes(fixup)[0..4], sub(31, 31, used_stack_bytes, .X));
 
     // MOV SP, X29
     _ = try output.writeLittle(u32, 0x910003BF);
