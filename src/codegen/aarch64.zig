@@ -420,7 +420,7 @@ pub fn bitAndStack(output: *ByteWriter, bit_size: u7, offset: offset_type) !void
     unreachable;
 }
 
-pub fn jumpRef(output: *ByteWriter, condition: ir.Jump.Condition, target_offset: usize, base_addr: ptr_type) !void {
+pub fn jumpRef(output: *ByteWriter, condition: ir.Jump.Condition, target_offset: usize) !void {
     unreachable;
 }
 

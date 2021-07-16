@@ -43,14 +43,11 @@ pub fn CodeGenerator(comptime platform: type) type {
         curr_stack_bytes: platform.offset_type = 0,
         max_stack_bytes: platform.offset_type = 0,
 
-        base_addr: platform.ptr_type,
-
         pub fn init(alloc: *std.mem.Allocator) @This() {
             return .{
                 .unresolved_refs = std.ArrayList(UnresolvedInstrRef).init(alloc),
                 .resolved_refs = std.ArrayList(ResolvedInstrRef).init(alloc),
                 .relocations = std.ArrayList(platform.Relocation).init(alloc),
-                .base_addr = 0x40000,
             };
         }
 
@@ -85,7 +82,8 @@ pub fn CodeGenerator(comptime platform: type) type {
                             if (item.fixup.isRelative()) {
                                 item.fixup.applyRelative(output, @intCast(i64, output.currentOffset()));
                             } else {
-                                item.fixup.applyAbsolute(output, output.currentOffset(), self.base_addr);
+                                // @TODO: We have to emit a relocation for this one
+                                unreachable;
                             }
                             _ = self.unresolved_refs.swapRemove(i);
                         }
@@ -127,7 +125,7 @@ pub fn CodeGenerator(comptime platform: type) type {
 
                 .jump => |jmp| {
                     if (self.getRef(jmp.id)) |resolved| {
-                        try platform.jumpRef(output, jmp.condition, resolved.offset, self.base_addr);
+                        try platform.jumpRef(output, jmp.condition, resolved.offset);
                     } else {
                         try self.unresolved_refs.append(.{
                             .id = jmp.id,
