@@ -4,6 +4,13 @@ pub const ByteWriter = struct {
     pub const Ref = struct {
         offset: usize,
         size: usize,
+
+        pub fn subslice(self: @This(), offset: usize) @This() {
+            return .{
+                .offset = self.offset + offset,
+                .size = self.size - offset,
+            };
+        }
     };
 
     storage: std.ArrayList(u8),
