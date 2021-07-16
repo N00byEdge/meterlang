@@ -513,7 +513,7 @@ pub fn ptrLoad(output: *ByteWriter, sign_extend: bool, bit_size: u7, ptr_stack_o
         8 => _ = try output.writeLittle(u32, strLdr(0, 1, @intCast(u12, ptr_stack_offset), mode, .B)),
         16 => _ = try output.writeLittle(u32, strLdr(0, 1, @intCast(u12, ptr_stack_offset), mode, .H)),
         32 => _ = try output.writeLittle(u32, strLdr(0, 1, @intCast(u12, ptr_stack_offset), mode, .W)),
-        64 => _ = try output.writeLittle(u32, strLdr(0, 1, @intCast(u12, ptr_stack_offset), mode, .X)),
+        64 => _ = try output.writeLittle(u32, strLdr(0, 1, @intCast(u12, ptr_stack_offset), .LoadZeroExtendX, .X)),
         else => unreachable,
     }
 }
