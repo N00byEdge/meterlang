@@ -253,7 +253,7 @@ test "memzero" {
         } },
         .{ .jump = .{
             .id = 0,
-            .condition = .AccNotEqualZero,
+            .condition = .AccEqualZero,
         } },
         .{ .add_constant = -1 },
         .{ .store_stack_var = .{
