@@ -58,7 +58,7 @@ pub fn CodeGenerator(comptime platform: type) type {
         }
 
         fn getRef(self: *@This(), idx: usize) ?ResolvedInstrRef {
-            if (self.resolved_refs.items.len < idx)
+            if (self.resolved_refs.items.len <= idx)
                 return null;
 
             return self.resolved_refs.items[idx];
@@ -97,6 +97,8 @@ pub fn CodeGenerator(comptime platform: type) type {
                                 unreachable;
                             }
                             _ = self.unresolved_refs.swapRemove(i);
+                        } else {
+                            i += 1;
                         }
                     }
                     try self.resolved_refs.append(.{
