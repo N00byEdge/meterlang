@@ -293,6 +293,50 @@ fn addRegs(rd: u5, rn: u5, rm: u5, op_size: SubAddOpSize) u32 {
     return subAddRegs(rd, rn, rm, op_size, .Add, .Unsigned);
 }
 
+fn condBranchReg(rt: u5, imm: u19, op_size: CondBranchOpSize, mode: CondBranchEq) u32 {
+    // zig fmt: off
+    return 0x34000000
+        | @intCast(u32, @enumToInt(op_size)) << 31
+        | @intCast(u32, @enumToInt(mode)) << 24
+        | @intCast(u32, imm) << 5
+        | @intCast(u32, rt) << 0
+    ;
+    // zig fmt: on
+}
+
+const CondBranchEq = enum(u1) {
+    Zero = 0,
+    Nonzero = 1,
+};
+
+const CondBranchOpSize = enum(u1) {
+    W = 0,
+    X = 1,
+};
+
+fn cbz(rt: u5, imm: u19, op_size: CondBranchOpSize) u32 {
+    return condBranchReg(rt, imm, op_size, .Zero);
+}
+
+fn cbnz(rt: u5, imm: u19, op_size: CondBranchOpSize) u32 {
+    return condBranchReg(rt, imm, op_size, .Nonzero);
+}
+
+fn condBranchRegReloc(output: *ByteWriter, rt: u5, op_size: CondBranchOpSize, mode: CondBranchEq) !Relocation {
+    return Relocation{
+        .reltype = .cond_branch_reg,
+        .bytes = try output.writeLittle(u32, condBranchReg(rt, 0, op_size, mode)),
+    };
+}
+
+fn cbzReloc(output: *ByteWriter, rt: u5, op_size: CondBranchOpSize) !Relocation {
+    return condBranchRegReloc(output, rt, op_size, .Zero);
+}
+
+fn cbnzReloc(output: *ByteWriter, rt: u5, op_size: CondBranchOpSize) !Relocation {
+    return condBranchRegReloc(output, rt, op_size, .Nonzero);
+}
+
 const Decomposed = struct {
     lsl0: ?u16,
     lsl16: ?u16,
