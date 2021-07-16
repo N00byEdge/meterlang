@@ -237,3 +237,55 @@ test "Store constant to null" {
         } },
     });
 }
+
+test "memzero" {
+    try testInstrs(&[_]ir.Instruction{
+        .{ .store_arguments = 2 },
+        .{ .load_stack_var = .{
+            .sign_extend = false,
+            .stack_op = .{
+                .bit_size = 64,
+                .stack_var = .{
+                    .idx = 0,
+                    .offset = 8,
+                },
+            },
+        } },
+        .{ .jump = .{
+            .id = 0,
+            .condition = .AccNotEqualZero,
+        } },
+        .{ .add_constant = -1 },
+        .{ .store_stack_var = .{
+            .bit_size = 64,
+            .stack_var = .{
+                .idx = 0,
+                .offset = 8,
+            },
+        } },
+        .{ .load_stack_var = .{
+            .sign_extend = false,
+            .stack_op = .{
+                .bit_size = 64,
+                .stack_var = .{
+                    .idx = 0,
+                    .offset = 0,
+                },
+            },
+        } },
+        .{ .ptr_store_constant = .{
+            .store_offset = 0,
+            .bit_size = 8,
+            .value = 0x0,
+        } },
+        .{ .add_constant = 1 },
+        .{ .store_stack_var = .{
+            .bit_size = 64,
+            .stack_var = .{
+                .idx = 0,
+                .offset = 0,
+            },
+        } },
+        .{ .ref_next_instruction = 0 },
+    });
+}
