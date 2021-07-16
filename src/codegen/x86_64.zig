@@ -433,3 +433,7 @@ pub fn ptrLoad(output: *ByteWriter, sign_extend: bool, bit_size: u7, ptr_stack_o
 
     try doPtrMov(output, bit_size, load_offset, 0x00);
 }
+
+pub fn storeArgs(output: *ByteWriter, num: usize, offset: offset_type) !void {
+    unreachable;
+}

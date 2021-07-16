@@ -517,3 +517,17 @@ pub fn ptrLoad(output: *ByteWriter, sign_extend: bool, bit_size: u7, ptr_stack_o
         else => unreachable,
     }
 }
+
+pub fn storeArgs(output: *ByteWriter, num: usize, offset: offset_type) !void {
+    var pushed: u5 = 0;
+    while (pushed < num) {
+        const current_offset = offset + pushed * 0x10;
+        if (pushed < num + 1 and current_offset <= std.math.maxInt(u7)) {
+            _ = try output.writeLittle(u32, stp(pushed, pushed + 1, 31, @intCast(u7, current_offset), .X));
+            pushed += 2;
+        } else {
+            _ = try output.writeLittle(u32, str(pushed, 31, current_offset, .X));
+            pushed += 1;
+        }
+    }
+}

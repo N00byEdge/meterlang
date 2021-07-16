@@ -105,6 +105,7 @@ pub fn CodeGenerator(comptime platform: type) type {
                 },
 
                 .add_stack => |push| _ = try self.addStackSlot(push.size),
+                .store_arguments => |num| try platform.storeArgs(output, num, try self.addStackSlot(num * 8)),
                 .drop_stack => |_| {
                     self.curr_stack_bytes = self.stack_offsets.items[self.stack_offsets.items.len - 2];
                     _ = self.stack_offsets.pop();

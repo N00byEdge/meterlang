@@ -2,6 +2,7 @@ pub const InstrType = enum {
     ref_next_instruction,
 
     add_stack,
+    store_arguments,
     drop_stack,
 
     load_constant,
@@ -36,6 +37,11 @@ pub const Instruction = union(InstrType) {
     add_stack: struct {
         size: usize,
     },
+
+    // Stores the first <value> arguments onto the stack. Creates a new stack
+    // slot (like using .add_stack), and you can access the arguments using offsetting
+    store_arguments: usize,
+
     drop_stack: void,
 
     load_constant: i65,
