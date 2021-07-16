@@ -185,6 +185,37 @@ test "ldr" {
     try std.testing.expect(ldr(0, 0, 0, .X) == 0xF9400000);
 }
 
+fn ldpStp(rt: u5, rt2: u5, rn: u5, offset: u7, op_size: LDPSTPOpSize, mode: LDPSTPMode) u32 {
+    // zig fmt: off
+    return 0x29000000
+        | @intCast(u32, @enumToInt(op_size)) << 31
+        | @intCast(u32, @enumToInt(mode)) << 22
+        | @intCast(u32, offset) << 15
+        | @intCast(u32, rt2) << 10
+        | @intCast(u32, rn) << 5
+        | @intCast(u32, rt) << 0
+    ;
+    // zig fmt: on
+}
+
+const LDPSTPMode = enum(u1) {
+    Store = 0,
+    Load = 1,
+};
+
+const LDPSTPOpSize = enum(u2) {
+    W = 0,
+    X = 2,
+};
+
+fn ldp(rt: u5, rt2: u5, rn: u5, offset: u7, op_size: LDPSTPOpSize) u32 {
+    return ldpStp(rt, rt2, rn, offset, op_size, .Load);
+}
+
+fn stp(rt: u5, rt2: u5, rn: u5, offset: u7, op_size: LDPSTPOpSize) u32 {
+    return ldpStp(rt, rt2, rn, offset, op_size, .Store);
+}
+
 fn subAdd(rd: u5, rn: u5, imm: u12, op_size: SubAddOpSize, mode: SubAddMode, sign: SubAddSignedness) u32 {
     // zig fmt: off
     return 0x11000000 // Opcode
