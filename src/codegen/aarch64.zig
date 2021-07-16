@@ -13,8 +13,14 @@ pub const offset_type = u12;
 pub const name = "aarch64";
 
 const RelocationType = enum {
-    rel24jmp,
+    cond_branch_reg,
+    imm_mov_lsl0,
+    imm_mov_lsl16,
+    imm_mov_lsl32,
+    imm_mov_lsl48,
 };
+
+const log = std.log.scoped(.aarch64);
 
 pub const Relocation = struct {
     reltype: RelocationType,
@@ -22,20 +28,34 @@ pub const Relocation = struct {
 
     pub fn isRelative(self: *const @This()) bool {
         return switch (self.reltype) {
-            .rel24jmp => true,
+            .imm_mov_lsl0, .imm_mov_lsl16, .imm_mov_lsl32, .imm_mov_lsl48 => false,
+            .cond_branch_reg => true,
         };
     }
 
     pub fn applyAbsolute(self: *const @This(), output: *ByteWriter, target_offset: usize, base_addr: ptr_type) void {
         return switch (self.reltype) {
-            .rel24jmp => unreachable,
+            .imm_mov_lsl0 => {},
+            .imm_mov_lsl16 => {},
+            .imm_mov_lsl32 => {},
+            .imm_mov_lsl48 => {},
+            else => unreachable,
         };
     }
 
-    pub fn applyRelative(self: *const @This(), output: *ByteWriter, rel: i65) void {
-        return switch (self.reltype) {
-            .rel24jmp => std.mem.writeIntLittle(i24, output.bytes(self.bytes)[0..3], @intCast(i24, @divExact(rel, 4))),
-        };
+    pub fn applyRelative(self: *const @This(), output: *ByteWriter, target_offset: i65) void {
+        const bytes = output.bytes(self.bytes)[0..4];
+        const value = std.mem.readIntLittle(u32, bytes);
+        var or_val: u32 = undefined;
+
+        const rel_addr = target_offset - self.bytes.offset;
+
+        switch (self.reltype) {
+            .cond_branch_reg => or_val = @intCast(u32, @bitCast(u19, @intCast(i19, @divExact(rel_addr, 4)))) << 5,
+            else => unreachable,
+        }
+
+        std.mem.writeIntLittle(u32, bytes, value | or_val);
     }
 };
 
