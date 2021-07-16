@@ -435,5 +435,21 @@ pub fn ptrLoad(output: *ByteWriter, sign_extend: bool, bit_size: u7, ptr_stack_o
 }
 
 pub fn storeArgs(output: *ByteWriter, num: usize, offset: offset_type) !void {
-    unreachable;
+    if (num > 6)
+        unreachable;
+
+    var base = -@intCast(i65, offset) - 8;
+
+    const regs = [_]u8{
+        7, // rdi
+        6, // rsi
+        2, // rdx
+        1, // rcx
+        8, // r8
+        9, // r9
+    };
+
+    for (regs) |r, i| {
+        try stackRegOp(output, .Store, 64, base - i * 8, r);
+    }
 }
