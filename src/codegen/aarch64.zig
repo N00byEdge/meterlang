@@ -526,7 +526,14 @@ pub fn jumpRef(output: *ByteWriter, condition: ir.Jump.Condition, target_offset:
 }
 
 pub fn jumpReloc(output: *ByteWriter, condition: ir.Jump.Condition) !Relocation {
-    unreachable;
+    return switch (condition) {
+        .AccEqualZero => try cbzReloc(output, 0, .X),
+        .AccNotEqualZero => try cbnzReloc(output, 0, .X),
+        else => |c| {
+            log.err("Unsupported jumpReloc condition: {s}", .{c});
+            unreachable;
+        },
+    };
 }
 
 pub fn emitAdrReloc(output: *ByteWriter, ref: ir.Xref) !Relocation {
