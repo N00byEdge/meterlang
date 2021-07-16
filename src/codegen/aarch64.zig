@@ -364,7 +364,24 @@ pub fn loadConstant(output: *ByteWriter, value: i65) !void {
 }
 
 pub fn addConstant(output: *ByteWriter, value: i65) !void {
-    unreachable;
+    // Does it fit in a add/sub immediate?
+    if (value < 0) {
+        if (-value <= std.math.maxInt(u12)) {
+            _ = try output.writeLittle(u32, sub(0, 0, @intCast(u12, -value), .X));
+            return;
+        }
+    } else {
+        if (value <= std.math.maxInt(u12)) {
+            _ = try output.writeLittle(u32, add(0, 0, @intCast(u12, value), .X));
+            return;
+        }
+    }
+
+    // Load the entire value into X1
+    try loadDecomposed(output, 1, decompose(value));
+
+    // ADD X0, X0, X1
+    _ = try output.writeLittle(u32, addRegs(0, 0, 1, .X));
 }
 
 pub fn compareConstant(output: *ByteWriter, value: i65) !void {
