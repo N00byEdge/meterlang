@@ -111,7 +111,7 @@ fn strLdr(rt: u6, rn: u6, offset: u12, mode: LDRSTRMode, mem_size: LDRSTRMemoryS
     return 0x39000000
         | @intCast(u32, rt) << 0
         | @intCast(u32, rn) << 5
-        | @intCast(u32, offset) << 10
+        | @intCast(u32, @divExact(offset, mem_size.bytes())) << 10
         | @intCast(u32, @enumToInt(mode)) << 22
         | @intCast(u32, @enumToInt(mem_size)) << 30
     ;
@@ -130,6 +130,15 @@ const LDRSTRMemorySize = enum(u2) {
     H = 1,
     W = 2,
     X = 3,
+
+    fn bytes(self: @This()) usize {
+        return switch (self) {
+            .B => 1,
+            .H => 2,
+            .W => 4,
+            .X => 8,
+        };
+    }
 
     fn toSignedLoadMode(self: @This()) LDRSTRMode {
         switch (self) {
@@ -210,7 +219,7 @@ fn ldpStp(rt: u5, rt2: u5, rn: u5, offset: u7, op_size: LDPSTPOpSize, mode: LDPS
     return 0x29000000
         | @intCast(u32, @enumToInt(op_size)) << 30
         | @intCast(u32, @enumToInt(mode)) << 22
-        | @intCast(u32, offset) << 15
+        | @intCast(u32, @divExact(offset, op_size.bytes())) << 15
         | @intCast(u32, rt2) << 10
         | @intCast(u32, rn) << 5
         | @intCast(u32, rt) << 0
@@ -226,6 +235,13 @@ const LDPSTPMode = enum(u1) {
 const LDPSTPOpSize = enum(u2) {
     W = 0,
     X = 2,
+
+    fn bytes(self: @This()) usize {
+        return switch (self) {
+            .W => 4,
+            .X => 8,
+        };
+    }
 };
 
 fn ldp(rt: u5, rt2: u5, rn: u5, offset: u7, op_size: LDPSTPOpSize) u32 {
