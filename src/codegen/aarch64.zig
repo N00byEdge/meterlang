@@ -338,6 +338,28 @@ fn cbnz(rt: u5, imm: u19, op_size: CondBranchOpSize) u32 {
     return condBranchReg(rt, imm, op_size, .Nonzero);
 }
 
+fn branch(imm: u26, mode: BranchMode) u32 {
+    // zig fmt: off
+    return 0x14000000
+        | @intCast(u32, imm) << 0
+        | @intCast(u32, @enumToInt(mode)) << 31
+    ;
+    // zig fmt: on
+}
+
+const BranchMode = enum(u1) {
+    Branch,
+    BranchAndLink,
+};
+
+fn b(imm: u26) u32 {
+    return branch(imm, .Branch);
+}
+
+fn bl(imm: u26) u32 {
+    return branch(imm, .BranchAndLink);
+}
+
 fn condBranchRegReloc(output: *ByteWriter, rt: u5, op_size: CondBranchOpSize, mode: CondBranchEq) !Relocation {
     return Relocation{
         .reltype = .cond_branch_reg,
@@ -538,7 +560,12 @@ pub fn bitAndStack(output: *ByteWriter, bit_size: u7, offset: offset_type) !void
 }
 
 pub fn jumpRef(output: *ByteWriter, condition: ir.Jump.Condition, target_offset: usize) !void {
-    unreachable;
+    const rel = @divExact(@intCast(i65, target_offset) - @intCast(i64, output.currentOffset()), 4);
+
+    switch (condition) {
+        .Always => _ = try output.writeLittle(u32, b(@bitCast(u26, @intCast(i26, rel)))),
+        else => unreachable,
+    }
 }
 
 pub fn jumpReloc(output: *ByteWriter, condition: ir.Jump.Condition) !Relocation {
